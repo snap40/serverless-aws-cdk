@@ -1,43 +1,43 @@
 {
-  "name": "serverless-aws-cdk",
-  "version": "0.7.0-rc1",
-  "description": "Provider plugin for the Serverless Framework v1.x which adds support for AWS through the CDK",
-  "main": "build/index.js",
-  "directories": {
-    "lib": "lib"
-  },
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/snap40/serverless-aws-cdk.git"
-  },
-  "author": "Richard Jones (richard@currenthealth.com)",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/snap40/serverless-aws-cdk/issues"
-  },
-  "homepage": "https://github.com/snap40/serverless-aws-cdk#readme",
-  "dependencies": {
-    "@aws-cdk/aws-lambda": "^1.62.0",
-    "@aws-cdk/aws-s3": "^1.62.0",
-    "@aws-cdk/core": "^1.62.0",
-    "@types/bluebird": "^3.5.32",
-    "@types/uuid": "^3.4.9",
-    "aws-cdk": "^1.62.0",
-    "aws-sdk": "^2.745.0",
-    "bluebird": "^3.7.2",
-    "form-data": "^3.0.0",
-    "lodash": "^4.17.20",
-    "source-map-support": "^0.5.19",
-    "typescript": "^3.9.5",
-    "uuid": "^3.4.0"
-  },
-  "devDependencies": {
-    "@types/node": "^12.12.47",
-    "@types/request": "^2.48.5",
-    "serverless": "^1.73.1"
-  }
+    "name": "serverless-aws-cdk",
+    "version": "0.7.0-rc1",
+    "description": "Provider plugin for the Serverless Framework v1.x which adds support for AWS through the CDK",
+    "main": "index",
+    "directories": {
+        "lib": "lib"
+    },
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/snap40/serverless-aws-cdk.git"
+    },
+    "author": "Richard Jones (richard@currenthealth.com)",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/snap40/serverless-aws-cdk/issues"
+    },
+    "homepage": "https://github.com/snap40/serverless-aws-cdk#readme",
+    "dependencies": {
+        "@aws-cdk/aws-lambda": "^1.62.0",
+        "@aws-cdk/aws-s3": "^1.62.0",
+        "@aws-cdk/core": "^1.62.0",
+        "@types/bluebird": "^3.5.32",
+        "@types/uuid": "^3.4.9",
+        "aws-cdk": "^1.62.0",
+        "aws-sdk": "^2.745.0",
+        "bluebird": "^3.7.2",
+        "form-data": "^3.0.0",
+        "lodash": "^4.17.20",
+        "source-map-support": "^0.5.19",
+        "typescript": "^3.9.5",
+        "uuid": "^3.4.0"
+    },
+    "devDependencies": {
+        "@types/node": "^12.12.47",
+        "@types/request": "^2.48.5",
+        "serverless": "^1.73.1"
+    }
 }
