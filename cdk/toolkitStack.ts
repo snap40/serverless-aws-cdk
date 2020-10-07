@@ -2,7 +2,6 @@ import Serverless = require('serverless');
 
 import { Bootstrapper, ToolkitInfo } from 'aws-cdk';
 import { AwsCdkDeploy } from '../deploy'
-import { getEnvironment } from './environment'
 
 function getToolkitStackName(serverless: Serverless) {
   // DEFAULT_TOOLKIT_STACK_NAME from aws-cdk/deployment-target
@@ -11,7 +10,7 @@ function getToolkitStackName(serverless: Serverless) {
 }
 
 export async function bootstrapToolkitStack(this: AwsCdkDeploy) {
-  const environment = await getEnvironment(this.provider);
+  const environment = await this.provider.getEnvironment();
   const toolkitStackName = getToolkitStackName(this.serverless);
   const roleArn = this.provider.getCfnRoleArn();
   const bootstrapper = new Bootstrapper({ source: 'default' });
