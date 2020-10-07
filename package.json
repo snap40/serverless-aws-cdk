@@ -9,7 +9,7 @@
     "scripts": {
         "build": "tsc",
         "watch": "tsc -w",
-        "install": "npm run build"
+        "postinstall": "npm run build"
     },
     "repository": {
         "type": "git",
@@ -26,6 +26,7 @@
         "@aws-cdk/aws-s3": "^1.62.0",
         "@aws-cdk/core": "^1.62.0",
         "@types/bluebird": "^3.5.32",
+        "@types/node": "^12.12.47",
         "@types/uuid": "^3.4.9",
         "aws-cdk": "^1.62.0",
         "aws-sdk": "^2.745.0",
@@ -36,7 +37,6 @@
         "uuid": "^3.4.0"
     },
     "devDependencies": {
-        "@types/node": "^12.12.47",
         "serverless": "^1.73.1"
     }
 }
