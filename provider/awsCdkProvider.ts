@@ -202,15 +202,41 @@ export class AwsCdkProvider {
     return value.replace(regex, "");
   }
 
+  getPackagePath() {
+    return (
+      this.options.package ||
+      this.serverless.service.package.path ||
+      path.join(this.serverless.config.servicePath || ".", ".serverless")
+    );
+  }
+
   getFunctionZipPath(functionName: string): string {
-    const func = this.serverless.service.getFunction(functionName);
-    if (func.package && func.package.artifact) {
-      return func.package.artifact;
-    } else if (this.serverless.service.artifact) {
-      return this.serverless.service.artifact;
-    } else {
-      throw new Error("Could not find zip package");
+    const functionArtifactFileName = `${functionName}.zip`;
+    const functionObject = this.serverless.service.getFunction(functionName);
+    functionObject.package = functionObject.package || {};
+    const artifactFilePath =
+      functionObject.package.artifact ||
+      this.serverless.service.package.artifact;
+
+    if (
+      !artifactFilePath ||
+      (this.serverless.service.artifact && !functionObject.package.artifact)
+    ) {
+      if (
+        this.serverless.service.package.individually ||
+        functionObject.package.individually
+      ) {
+        const artifactFileName = functionArtifactFileName;
+        return path.join(this.getPackagePath(), artifactFileName);
+      }
+
+      return path.join(
+        this.getPackagePath(),
+        `${this.serverless.service.service}.zip`
+      );
     }
+
+    return artifactFilePath;
   }
 
   async getEnvironment(): Promise<cxapi.Environment> {
@@ -259,6 +285,10 @@ export class AwsCdkProvider {
       ["serverless", "config", "cloudFormationExecutionPolicies"],
       ["serverless", "service", "provider", "cloudFormationExecutionPolicies"],
     ]);
-    return this.firstValue(values).value || ["arn:aws:iam::aws:policy/AdministratorAccess"];
+    return (
+      this.firstValue(values).value || [
+        "arn:aws:iam::aws:policy/AdministratorAccess",
+      ]
+    );
   }
 }
