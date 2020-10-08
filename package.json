@@ -1,6 +1,6 @@
 {
     "name": "serverless-aws-cdk",
-    "version": "0.7.0-rc1",
+    "version": "0.7.0",
     "description": "Provider plugin for the Serverless Framework v1.x which adds support for AWS through the CDK",
     "main": "build/index.js",
     "directories": {
