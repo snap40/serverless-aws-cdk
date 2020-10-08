@@ -173,13 +173,13 @@ Now, let's define our infrastructure in `cdk/index.ts`.
 import { api as ServerlessAwsCdk } from 'serverless-aws-cdk';
 import * as cdk from '@aws-cdk/core'
 import * as lambdaevents from '@aws-cdk/aws-lambda-event-sources';
-import * as sqs from '@aws-cdk/aws-sqs
+import * as sqs from '@aws-cdk/aws-sqs';
 
 export class Infrastructure extends ServerlessAwsCdk.InfrastructureConstruct {
   constructor(scope: cdk.Construct, id: string, props: ServerlessAwsCdk.InfrastructureProps) {
     super(scope, id, props);
     const sampleLambda = props.functions['sample_lambda'];
-    const queue = sqs.Queue(this, 'SampleQueue', {
+    const queue = new sqs.Queue(this, 'SampleQueue', {
         queueName: 'cdk-example-queue'
     });
     sampleLambda.addEventSource(new lambdaevents.SqsEventSource(queue));

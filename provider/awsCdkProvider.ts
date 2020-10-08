@@ -1,21 +1,18 @@
 import _ = require("lodash");
 import serverless = require("serverless");
-import { ISDK, SdkProvider, Mode } from "aws-cdk";
-import { STS } from "aws-sdk";
+import {ISDK, SdkProvider, Mode} from "aws-cdk";
 import path = require("path");
-import cxapi = require('@aws-cdk/cx-api');
+import cxapi = require("@aws-cdk/cx-api");
 
 interface AccountInfo {
   accountId: string;
   partition: string;
-  arn: string;
-  userId: string;
 }
 
 export class AwsCdkProvider {
   static constants = {
     providerName: "aws-cdk",
-    outDirRelativePath: ".serverless-aws-cdk-assembly"
+    outDirRelativePath: ".serverless-aws-cdk-assembly",
   };
 
   options: any;
@@ -42,11 +39,11 @@ export class AwsCdkProvider {
 
   setupLogging() {
     const oldConsole = console;
-    this.serverless.cli.consoleLog = function(message: string) {
+    this.serverless.cli.consoleLog = function (message: string) {
       oldConsole.log(message); // eslint-disable-line no-console
     };
 
-    const nopLog = function(..._args: any) { };
+    const nopLog = function (..._args: any) {};
 
     if (process.env.SLS_DEBUG) {
       console.trace = this.serverless.cli.log;
@@ -59,30 +56,27 @@ export class AwsCdkProvider {
     console.error = this.serverless.cli.log;
   }
 
-  getValues(
-    source: object,
-    paths: string[][]
-  ): { path: string[]; value: any }[] {
-    return paths.map(path => ({
+  getValues(source: object, paths: string[][]): {path: string[]; value: any}[] {
+    return paths.map((path) => ({
       path,
-      value: _.get(source, path.join("."))
+      value: _.get(source, path.join(".")),
     }));
   }
 
   firstValue(
-    values: { path: string[]; value: any }[]
-  ): { path: string[]; value: any } {
+    values: {path: string[]; value: any}[]
+  ): {path: string[]; value: any} {
     return values.reduce(
       (result, current) => (result.value ? result : current),
-      { path: [], value: undefined }
+      {path: [], value: undefined}
     );
   }
 
-  getStageSourceValue(): { path: string[]; value: any } {
+  getStageSourceValue(): {path: string[]; value: any} {
     const values = this.getValues(this, [
       ["options", "stage"],
       ["serverless", "config", "stage"],
-      ["serverless", "service", "provider", "stage"]
+      ["serverless", "service", "provider", "stage"],
     ]);
     return this.firstValue(values);
   }
@@ -96,30 +90,41 @@ export class AwsCdkProvider {
     return (await this.getAccountInfo()).accountId;
   }
 
-  async getAccountInfo(): Promise<AccountInfo> {
-    const clientConfig: STS.Types.ClientConfiguration = {
-      region: this.getRegion()
-    };
+  getAccountIdSourceValue(): {path: string[]; value: any} {
+    const values = this.getValues(this, [
+      ["options", "accountId"],
+      ["serverless", "config", "accountId"],
+      ["serverless", "service", "provider", "accountId"],
+    ]);
+    return this.firstValue(values);
+  }
 
-    const sts = new STS(clientConfig);
-    const result = await sts.getCallerIdentity().promise();
-    const arn = result.Arn!;
-    const accountId = result.Account!;
-    const partition = _.nth(_.split(arn, ":"), 1)!;
-    const userId = result.UserId!;
+  getPartitionSourceValue(): {path: string[]; value: any} {
+    const values = this.getValues(this, [
+      ["options", "partition"],
+      ["serverless", "config", "partition"],
+      ["serverless", "service", "provider", "partition"],
+    ]);
+    return this.firstValue(values);
+  }
+
+  async getAccountInfo(): Promise<AccountInfo> {
+    const account = await (await this.getSdkProvider()).defaultAccount();
+
+    const accountId = this.getAccountIdSourceValue().value;
+    const partition = this.getPartitionSourceValue().value;
+
     return {
-      accountId,
-      partition,
-      arn,
-      userId
+      accountId: accountId || account?.accountId,
+      partition: partition || account?.partition,
     };
   }
 
-  getRegionSourceValue(): { path: string[]; value: any } {
+  getRegionSourceValue(): {path: string[]; value: any} {
     const values = this.getValues(this, [
       ["options", "region"],
       ["serverless", "config", "region"],
-      ["serverless", "service", "provider", "region"]
+      ["serverless", "service", "provider", "region"],
     ]);
     return this.firstValue(values);
   }
@@ -134,7 +139,7 @@ export class AwsCdkProvider {
       ["options", "aws-profile"],
       ["options", "profile"],
       ["serverless", "config", "profile"],
-      ["serverless", "service", "provider", "profile"]
+      ["serverless", "service", "provider", "profile"],
     ]);
     const firstVal = this.firstValue(values);
     return firstVal ? firstVal.value : null;
@@ -150,7 +155,7 @@ export class AwsCdkProvider {
     );
   }
 
-  getStackTags(): { [key: string]: string } {
+  getStackTags(): {[key: string]: string} {
     return this.serverless.service.provider.stackTags || {};
   }
 
@@ -216,29 +221,44 @@ export class AwsCdkProvider {
     const environment: cxapi.Environment = {
       name: stage,
       account: accountId,
-      region: region
+      region: region,
     };
 
     return environment;
   }
 
-
   async getSdk(): Promise<ISDK> {
     const assumeRoleArn = this.getCfnRoleArn();
     const sdkProvider = await this.getSdkProvider();
     if (!!assumeRoleArn) {
-      return await sdkProvider.withAssumedRole(assumeRoleArn, (await this.getAccountId()), this.getRegion());
+      return await sdkProvider.withAssumedRole(
+        assumeRoleArn,
+        await this.getAccountId(),
+        this.getRegion()
+      );
     } else {
-      return await sdkProvider.forEnvironment(await this.getEnvironment(), Mode.ForWriting);
+      return await sdkProvider.forEnvironment(
+        await this.getEnvironment(),
+        Mode.ForWriting
+      );
     }
   }
   async getSdkProvider(): Promise<SdkProvider> {
     if (!this.sdkProvider) {
       this.sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({
-        profile: this.getProfile()
+        profile: this.getProfile(),
       });
     }
 
     return this.sdkProvider;
+  }
+
+  getCfnExecutionPolicies(): string[] {
+    const values = this.getValues(this, [
+      ["options", "cloudFormationExecutionPolicies"],
+      ["serverless", "config", "cloudFormationExecutionPolicies"],
+      ["serverless", "service", "provider", "cloudFormationExecutionPolicies"],
+    ]);
+    return this.firstValue(values).value || ["arn:aws:iam::aws:policy/AdministratorAccess"];
   }
 }
