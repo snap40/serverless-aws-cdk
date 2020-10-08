@@ -1,7 +1,6 @@
 import _ = require("lodash");
 import serverless = require("serverless");
 import {ISDK, SdkProvider, Mode} from "aws-cdk";
-import {STS} from "aws-sdk";
 import path = require("path");
 import cxapi = require("@aws-cdk/cx-api");
 
