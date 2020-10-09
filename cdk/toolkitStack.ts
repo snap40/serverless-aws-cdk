@@ -1,9 +1,9 @@
-import Serverless = require("serverless");
+import serverless = require("../types/serverless");
 
 import {Bootstrapper, ToolkitInfo} from "aws-cdk";
 import {AwsCdkDeploy} from "../deploy";
 
-function getToolkitStackName(serverless: Serverless) {
+function getToolkitStackName(serverless: serverless) {
   // DEFAULT_TOOLKIT_STACK_NAME from aws-cdk/deployment-target
   const DEFAULT_TOOLKIT_STACK_NAME = "CDKToolkit";
   return (

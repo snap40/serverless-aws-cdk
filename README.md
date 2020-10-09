@@ -139,7 +139,6 @@ provider:
   cdkModulePath: ./cdk
   region: 'eu-west-1'
   stackName: '${self:provider.stage}-${self:service}'
-  cfnRole: 'arn:aws:iam::${self:custom.env.aws_account_id}:role/CfnRole'
 
 package:
     exclude:
@@ -287,6 +286,24 @@ After stack deployment, CDK by default prints out stack Outputs. We recommend us
 ``` typescript
     new cdk.CfnOutput(this, 'BaseApiUrl', { value: restApi.root.url }).overrideLogicalId('BaseApiUrl');
     new cdk.CfnOutput(this, 'HelloApiUrl', { value: hello.url }).overrideLogicalId('HelloApiUrl');
+```
+
+### Other Properties
+
+Other properties are accessible through the AWS CDK provider. You can get an instance of it with:
+
+``` typescript
+import { AwsCdkProvider } from "serverless-aws-cdk/provider"
+
+// And inside your stack definition...
+const provider = props.serverless.getProvider("aws-cdk") as AwsCdkProvider;
+```
+
+From there, you can call [any method on the class](https://github.com/snap40/serverless-aws-cdk/blob/master/provider/awsCdkProvider.ts). For example:
+
+``` typescript
+const accountId = provider.getAccountId();
+const region = provider.getRegion();
 ```
 
 ## Usage

@@ -1,5 +1,5 @@
 import BbPromise = require('bluebird');
-import serverless = require('serverless');
+import serverless = require("../types/serverless");
 import { AwsCdkProvider } from '../provider';
 
 import { compile, clean } from '../cdk/compile';
