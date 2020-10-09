@@ -66,8 +66,6 @@ how to compile your CDK definitions:
 }
 ```
 
-TODO: `tsconfig.json` path is configurable, right?
-
 `serverless-aws-cdk` transpiles infrastructure code to `*.js` and `*.d.ts`
 files, and it stores state in `.serverless-aws-cdk-assembly`. You may want to
 add those to your `.gitignore`. An example `.gitignore` is as follows (note: the
@@ -188,50 +186,147 @@ export class Infrastructure extends ServerlessAwsCdk.InfrastructureConstruct {
 ```
 
 ## Configuration
-There are several supported configuration options when using
-`serverless-aws-cdk`. If there's something you'd like to configure but which
-isn't listed here, it may be that you're able to configure it within your CDK
-code.
+There are several supported configuration options when using `serverless-aws-cdk`. If there's something you'd like to configure but which isn't listed here, it may be that you're able to configure it within your CDK code.
 
-| Key                      | Description                                                                                 | Default               |
-|--------------------------|---------------------------------------------------------------------------------------------|-----------------------|
-| `provider.runtime`       | Global setting for runtime of Lambda functions                                              |                       |
-| `provider.stage`         | Deployment stage (e.g. `beta`, `gamma`, `prod`), used in the default naming of functions    | `dev`                 |
-| `provider.cdkModulePath` | Which Javascript/Typescript module to search in to find your CDK infrastructure definitions | Don't import a module |
-| `provider.region`        | The region in which to deploy your stack                                                    | `us-east-1`           |
-| `provider.stackName`     | The name of the stack                                                                       | `${service}-${stage}`     |
+### Provider-level Configuration
 
-TODO
+These are project-wide settings, applied in the `provider` block of your `serverless.yml`.
+
+| Key                                        | Description                                                                              | Default                                         |
+|--------------------------------------------|------------------------------------------------------------------------------------------|-------------------------------------------------|
+| `provider.runtime`                         | Global setting for runtime of Lambda functions                                           |                                                 |
+| `provider.stage`                           | Deployment stage (e.g. `beta`, `gamma`, `prod`), used in the default naming of functions | `dev`                                           |
+| `provider.cdkModulePath`                   | The path to search in to find your CDK infrastructure definitions after compilation      | Don't import a module                           |
+| `provider.region`                          | The region in which to deploy your stack                                                 | `us-east-1`                                     |
+| `provider.stackName`                       | The name of the stack                                                                    | `${service}-${stage}`                           |
+| `provider.accountId`                       | The account to deploy into                                                               | The account your credentials are in             |
+| `provider.cfnRole`                         | Arn of the role to use when invoking CloudFormation                                      | Don't assume a role                             |
+| `provider.cloudFormationExecutionPolicies` | List of Arns of IAM policies to give permissions to the CFN execution role               | `[arn:aws:iam::aws:policy/AdministratorAccess]` |
+| `provider.deploymentBucket`                | The AWS bucket to upload artifacts to (object with `name` key)                           | CDK-generated bucket name                       |
+| `provider.stackTags`                       | Tags to apply to the stack and all resources in it                                       | No tags                                         |
+| `provider.tsConfigPath`                    | The path of the `tsconfig.json` file to use when compiling your infra definition         | `${PROJECT_ROOT}/tsconfig.json`                 |
+
+For example:
 
 ```
 provider:
-  stackTags: ${self:custom.env.tags}
-  cfnRole: "arn:aws:iam::${self:custom.env.aws_account_id}:role/CfnRole"
+  stage: ${opt:stage, 'dev'}
+  stackTags:
+  - stage: ${self:provider.stage}
+  cfnRole: "arn:aws:iam::1234567890:role/CfnRole"
   deploymentBucket:
-    name: "chealth-serverlessdeployment-${self:custom.env.aws_account_id}-${self:provider.region}"
+    name: "cdk-serverlessdeployment"
+```
 
+
+### Function-level Configuration
+
+These are function- settings, applied in the `${function_name}` block of your `serverless.yml`.
+
+| Key                            | Description                                            |
+|--------------------------------|--------------------------------------------------------|
+| `${function_name}.runtime`     | Lambda runtime                                         |
+| `${function_name}.name`        | The name of the function                               |
+| `${function_name}.timeout`     | Function timeout in seconds                            |
+| `${function_name}.environment` | An object mapping environment variable names to values |
+
+For example:
+
+```
 function:
   function_name:
-    runtime: foo
+    runtime: python3.8
     name: foobar
     timeout: 10
     environment:
       FOO: bar
 ```
 
+### Infrastructure Definition
+
+All infrastructure definition with serverless-aws-cdk should be defined in your CDK module. This project intentionally does not copy some functionality over from the AWS provider, on the basis that with the CDK it's simple to define it yourself.
+
+For example, if you wanted to replicate the following function definition for the AWS provider with serverless-aws-cdk:
+
+``` yaml
+functions:
+  helloworld:
+    handler: handler.helloworld
+    events:
+      - httpApi:
+          method: GET
+          path: /hello
+```
+
+You'd remove the `events` block and instead specify it in your CDK module.
+
+``` typescript
+export class Infrastructure extends ServerlessAwsCdk.InfrastructureConstruct {
+  constructor(scope: cdk.Construct, id: string, props: ServerlessAwsCdk.InfrastructureProps) {
+    super(scope, id, props);
+    const restApi = new apigateway.RestApi(this, "MyApi", {
+      restApiName: `${props.self.provider.stage}-api`,
+      deploy: true,
+      deployOptions: {
+        stageName: props.self.provider.stage
+      }
+    });
+
+    const hello = restApi.root.addResource('hello');
+    const handler = props.functions['helloworld'];
+    const lambdaIntegration = new apigateway.LambdaIntegration(handler);
+    hello.addMethod('GET', lambdaIntegration);
+  }
+}
+```
+
+### Print Resources
+
+After stack deployment, CDK by default prints out stack Outputs. We recommend using this to print e.g. APIGateway URLs. To print an APIGateway URL at deploy time, you can create stack outputs as follows:
+
+``` typescript
+    new cdk.CfnOutput(this, 'BaseApiUrl', { value: restApi.root.url }).overrideLogicalId('BaseApiUrl');
+    new cdk.CfnOutput(this, 'HelloApiUrl', { value: hello.url }).overrideLogicalId('HelloApiUrl');
+```
+
 ## Usage
 
-TODO
+### Supported Commands
 
+To deploy your entire stack:
+
+``` sh
+serverless deploy
 ```
-Implemented:
-* deploy
-* diff
-* remove
 
+To deploy a specific function:
 
-Missing:
-* info (workaround: export as outputs)
-* logs
-* invoke
+``` sh
+serverless deploy -f ${function_name}
+```
+
+To print the diff what's deployed and what your infra specifies:
+
+``` sh
+serverless diff
+```
+
+To destroy the stack:
+
+``` sh
+serverless remove
+```
+
+#### Not Yet Supported
+
+``` sh
+serverless info
+```
+
+``` sh
+serverless logs
+```
+
+``` sh
+serverless invoke
 ```
