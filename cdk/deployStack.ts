@@ -7,6 +7,7 @@ export async function deployStack(this: AwsCdkDeploy) {
 
   await toolkit.deploy({
     stackNames: [this.provider.getStackName()],
+    requireApproval: this.provider.getRequireApproval(),
     roleArn: roleArn
   });
 }

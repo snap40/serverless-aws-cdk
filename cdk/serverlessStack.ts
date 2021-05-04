@@ -61,7 +61,7 @@ export class ServerlessStack extends cdk.Stack {
             timeout: func.timeout
               ? cdk.Duration.seconds(func.timeout)
               : undefined,
-            runtime: new lambda.Runtime(runtime),
+            runtime: lambda.Runtime.ALL.filter(el => el.name === runtime)[0],
             environment: func.environment || {},
             functionName: func.name
           }
