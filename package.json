@@ -1,6 +1,6 @@
 {
     "name": "serverless-aws-cdk",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "description": "Provider plugin for the Serverless Framework v1.x which adds support for AWS through the CDK",
     "main": "build/index.js",
     "directories": {
@@ -21,12 +21,12 @@
     },
     "homepage": "https://github.com/snap40/serverless-aws-cdk#readme",
     "dependencies": {
-        "@aws-cdk/aws-lambda": "^1.62.0",
-        "@aws-cdk/aws-s3": "^1.62.0",
-        "@aws-cdk/core": "^1.62.0",
+        "@aws-cdk/aws-lambda": "^1.102.0",
+        "@aws-cdk/aws-s3": "^1.102.0",
+        "@aws-cdk/core": "^1.102.0",
         "@types/bluebird": "^3.5.32",
         "@types/uuid": "^3.4.9",
-        "aws-cdk": "^1.62.0",
+        "aws-cdk": "^1.102.0",
         "aws-sdk": "^2.745.0",
         "bluebird": "^3.7.2",
         "form-data": "^3.0.0",

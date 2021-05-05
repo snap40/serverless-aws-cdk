@@ -3,6 +3,7 @@ import serverless = require("../types/serverless");
 import {ISDK, SdkProvider, Mode} from "aws-cdk";
 import path = require("path");
 import cxapi = require("@aws-cdk/cx-api");
+import { RequireApproval } from "aws-cdk/lib/diff";
 
 interface AccountInfo {
   accountId: string;
@@ -155,6 +156,10 @@ export class AwsCdkProvider {
     );
   }
 
+  getRequireApproval(): RequireApproval | undefined {
+    return this.serverless.service.provider.requireApproval || undefined;
+  }
+
   getStackTags(): {[key: string]: string} {
     return this.serverless.service.provider.stackTags || {};
   }
@@ -257,10 +262,12 @@ export class AwsCdkProvider {
     const assumeRoleArn = this.getCfnRoleArn();
     const sdkProvider = await this.getSdkProvider();
     if (!!assumeRoleArn) {
-      return await sdkProvider.withAssumedRole(
-        assumeRoleArn,
-        await this.getAccountId(),
-        this.getRegion()
+      return await sdkProvider.forEnvironment(
+        await this.getEnvironment(),
+        Mode.ForWriting,
+        {
+          assumeRoleArn: assumeRoleArn
+        }
       );
     } else {
       return await sdkProvider.forEnvironment(
