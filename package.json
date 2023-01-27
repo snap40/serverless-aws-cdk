@@ -38,6 +38,6 @@
     "devDependencies": {
         "@types/node": "^12.12.47",
         "@types/request": "^2.48.5",
-        "serverless": "^1.73.1"
+        "serverless": "^3.27.0"
     }
 }
